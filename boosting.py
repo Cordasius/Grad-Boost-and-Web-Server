@@ -126,4 +126,4 @@ class GradientBoostingMSE:
         ]
         instance.const_prediction = params["const_prediction"]
 
-        return instance
+        return instance     

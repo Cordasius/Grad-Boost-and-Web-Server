@@ -4,7 +4,7 @@ import numpy as np
 import numpy.typing as npt
 
 
-class ConvergenceHistory(TypedDict):
+class ConvergenceHistory(TypedDict):   
     """
     TypedDict to store the convergence history of training and validation losses.
 

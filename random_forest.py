@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 from sklearn.tree import DecisionTreeRegressor
 
-from .utils import ConvergenceHistory
+from .utils import ConvergenceHistory  
 
 
 class RandomForestMSE:
