@@ -8,7 +8,7 @@ import numpy as np
 import numpy.typing as npt
 from sklearn.tree import DecisionTreeRegressor
 
-from .utils import ConvergenceHistory, rmsle, whether_to_stop
+from .utils import ConvergenceHistory, rmse, whether_to_stop
 
 
 class GradientBoostingMSE:
@@ -84,11 +84,11 @@ class GradientBoostingMSE:
             history['time'].append(time.time() - start_time)
 
             train_preds += self.learning_rate * tree.predict(X)
-            train_loss = rmsle(train_preds, y)
+            train_loss = rmse(train_preds, y)
             history['train'].append(train_loss)
             if X_val is not None:
                 val_preds += self.learning_rate * tree.predict(X_val)
-                val_loss = rmsle(val_preds, y_val)
+                val_loss = rmse(val_preds, y_val)
                 history['val'].append(val_loss)
 
             if patience is not None:
