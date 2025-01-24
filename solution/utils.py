@@ -43,6 +43,26 @@ def rmsle(y: npt.NDArray[np.float64], z: npt.NDArray[np.float64]) -> np.float64:
     res = np.sqrt(np.mean((np.log1p(y) - np.log1p(z)) ** 2))
     return float(res)
 
+def rmse(y: npt.NDArray[np.float64], z: npt.NDArray[np.float64]) -> np.float64:
+    """
+    Calculate the MSE between two arrays.
+
+    Args
+    ----
+    y : npt.NDArray[np.float64]
+        The true values.
+    z : npt.NDArray[np.float64]
+        The predicted values.
+
+    Returns
+    -------
+    float
+        The RMSLE value.
+    """
+    res = (np.mean((y - z) ** 2)) ** 0.5
+    return float(res)
+
+
 
 def whether_to_stop(convergence_history: ConvergenceHistory, patience: int) -> bool:
     """
@@ -72,4 +92,19 @@ def whether_to_stop(convergence_history: ConvergenceHistory, patience: int) -> b
         If neither 'train' nor 'val' key is present in the convergence_history.
     """
     
-    ...
+    if convergence_history['val']:
+        losses = convergence_history['val']
+    else:
+        if convergence_history['train']:
+            losses = convergence_history['train']
+        else:
+            raise KeyError
+    loss_length = len(losses)
+
+    if loss_length <= patience:
+        return False
+
+    for i in range(len(losses) - patience):
+        if min(losses[i + 1:i + patience + 1]) >= losses[i]:
+            return True
+    return False

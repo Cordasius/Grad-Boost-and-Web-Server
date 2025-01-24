@@ -3,11 +3,12 @@ from pathlib import Path
 from typing import Any
 
 import joblib
+import time
 import numpy as np
 import numpy.typing as npt
 from sklearn.tree import DecisionTreeRegressor
 
-from .utils import ConvergenceHistory
+from .utils import ConvergenceHistory, rmse, whether_to_stop
 
 
 class GradientBoostingMSE:
@@ -63,7 +64,42 @@ class GradientBoostingMSE:
             ConvergenceHistory | None: Instance of `ConvergenceHistory` if `trace=True` or if validation data is provided.
         """
         
-        ...
+        np.random.seed(42)
+
+        history = ConvergenceHistory()
+        history['train'] = []
+        history['time'] = []
+        self.const_prediction = np.mean(y)
+        train_preds = np.full(X.shape[0], self.const_prediction)
+        if X_val is not None and y_val is not None:
+            trace = True
+            history['val'] = []
+            val_preds = np.full(X_val.shape[0], self.const_prediction)
+
+        for tree in self.forest:
+            cur_loss = y - train_preds
+
+            start_time = time.time()
+            tree.fit(X, cur_loss)
+            history['time'].append(time.time() - start_time)
+
+            train_preds += self.learning_rate * tree.predict(X)
+            train_loss = rmse(train_preds, y)
+            history['train'].append(train_loss)
+            if X_val is not None:
+                val_preds += self.learning_rate * tree.predict(X_val)
+                val_loss = rmse(val_preds, y_val)
+                history['val'].append(val_loss)
+
+            if patience is not None:
+                if whether_to_stop(history, patience):
+                    break
+
+        if trace:
+            return history
+
+        return None
+
 
     def predict(self, X: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
         """
@@ -78,7 +114,11 @@ class GradientBoostingMSE:
             npt.NDArray[np.float64]: Predicted values, array of shape (n_objects,).
         """
         
-        ...
+        pred = np.full(X.shape[0], self.const_prediction)
+        for tree in self.forest:
+            pred += self.learning_rate * tree.predict(X)
+        return pred
+
 
     def dump(self, dirpath: str) -> None:
         """
