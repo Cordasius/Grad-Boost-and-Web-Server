@@ -7,7 +7,8 @@ import numpy as np
 import numpy.typing as npt
 from sklearn.tree import DecisionTreeRegressor
 
-from .utils import ConvergenceHistory  
+from .utils import ConvergenceHistory, rmse, whether_to_stop
+import time
 
 
 class RandomForestMSE:
@@ -54,7 +55,42 @@ class RandomForestMSE:
             ConvergenceHistory | None: Instance of `ConvergenceHistory` if `trace=True` or if validation data is provided.
         """
         
-        ...
+        np.random.seed(42)
+        history = ConvergenceHistory()
+        history['train'] = []
+        history['time'] = []
+        train_preds = np.zeros(X.shape[0])
+        if X_val is not None and y_val is not None:
+            trace = True
+            history['val'] = []
+            val_preds = np.zeros(X_val.shape[0])
+
+        for idx, tree in enumerate(self.forest):
+            bootstrap_indices = np.random.choice(
+                X.shape[0], size=X.shape[0], replace=True)
+            X_bootstrap, y_bootstrap = X[bootstrap_indices], y[bootstrap_indices]
+
+            start_time = time.time()
+            tree.fit(X_bootstrap, y_bootstrap)
+            history['time'].append(time.time() - start_time)
+
+            train_preds += tree.predict(X)
+            train_loss = rmse(train_preds / (idx + 1), y)
+            history['train'].append(train_loss)
+            if X_val is not None:
+                val_preds += tree.predict(X_val)
+                val_loss = rmse(val_preds / (idx + 1), y_val)
+                history['val'].append(val_loss)
+
+            if patience is not None:
+                if whether_to_stop(history, patience):
+                    break
+
+        if trace:
+            return history
+
+        return None
+
 
     def predict(self, X: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
         """
