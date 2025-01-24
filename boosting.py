@@ -114,7 +114,11 @@ class GradientBoostingMSE:
             npt.NDArray[np.float64]: Predicted values, array of shape (n_objects,).
         """
         
-        ...
+        pred = np.full(X.shape[0], self.const_prediction)
+        for tree in self.forest:
+            pred += self.learning_rate * tree.predict(X)
+        return pred
+
 
     def dump(self, dirpath: str) -> None:
         """
