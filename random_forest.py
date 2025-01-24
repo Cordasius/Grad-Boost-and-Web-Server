@@ -105,7 +105,11 @@ class RandomForestMSE:
             npt.NDArray[np.float64]: Predicted values, array of shape (n_objects,).
         """
         
-        ...
+        preds = np.zeros(X.shape[0])
+        for tree in self.forest:
+            preds += tree.predict(X)
+        return preds / self.n_estimators
+
 
     def dump(self, dirpath: str) -> None:
         """
