@@ -1,0 +1,54 @@
+[project]
+name = "Ensembles"
+version = "0.1.0"
+description = ""
+authors = [{ name = "Avramenko Mikhail", email = "amv2111@mail.ru" }]
+maintainers = [{ name = "Avramenko Mikhail", email = "amv2111@mail.ru" }]
+readme = "README.md"
+requires-python = "<3.13,>=3.12"
+dependencies = [
+    "numpy", 
+    "matplotlib",
+    "scikit-learn",
+    "joblib",
+    "pathlib"
+]
+
+#[project.scripts]
+#server = "solution.__main__:"
+
+[tool.hatch.build.targets.wheel]
+packages = ["solution/"]
+
+
+[dependency-groups]
+dev = ["ruff>=0.6.9"]
+
+
+[tool.ruff]
+line-length = 200
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "YTT", "S"]
+ignore = [
+    "N802", # Function name `<name>` should be lowercase.
+    "N805", # First argument of a method should be named self.
+    "N812", # Lowercase imported as non lowercase.
+    "S104", # Possible binding to all interfaces.
+    "S110", # `try`-`except`-`pass` detected, consider logging the exception.
+    "N803",
+    "N806"
+]
+
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
