@@ -1,9 +1,9 @@
 import json
+import time
 from pathlib import Path
 from typing import Any
 
 import joblib
-import time
 import numpy as np
 import numpy.typing as npt
 from sklearn.tree import DecisionTreeRegressor
@@ -63,7 +63,7 @@ class GradientBoostingMSE:
         Returns:
             ConvergenceHistory | None: Instance of `ConvergenceHistory` if `trace=True` or if validation data is provided.
         """
-        
+
         np.random.seed(42)
 
         history = ConvergenceHistory()
@@ -113,7 +113,7 @@ class GradientBoostingMSE:
         Returns:
             npt.NDArray[np.float64]: Predicted values, array of shape (n_objects,).
         """
-        
+
         pred = np.full(X.shape[0], self.const_prediction)
         for tree in self.forest:
             pred += self.learning_rate * tree.predict(X)
@@ -166,4 +166,4 @@ class GradientBoostingMSE:
         ]
         instance.const_prediction = params["const_prediction"]
 
-        return instance     
+        return instance

@@ -1,4 +1,5 @@
 import json
+import time
 from pathlib import Path
 from typing import Any
 
@@ -8,13 +9,10 @@ import numpy.typing as npt
 from sklearn.tree import DecisionTreeRegressor
 
 from .utils import ConvergenceHistory, rmse, whether_to_stop
-import time
 
 
 class RandomForestMSE:
-    def __init__(
-        self, n_estimators: int, tree_params: dict[str, Any] | None = None
-    ) -> None:
+    def __init__(self, n_estimators: int, tree_params: dict[str, Any] | None = None) -> None:
         """
         Handmade random forest regressor.
 
@@ -27,9 +25,7 @@ class RandomForestMSE:
         self.n_estimators = n_estimators
         if tree_params is None:
             tree_params = {}
-        self.forest = [
-            DecisionTreeRegressor(**tree_params) for _ in range(n_estimators)
-        ]
+        self.forest = [DecisionTreeRegressor(**tree_params) for _ in range(n_estimators)]
 
     def fit(
         self,
@@ -54,33 +50,32 @@ class RandomForestMSE:
         Returns:
             ConvergenceHistory | None: Instance of `ConvergenceHistory` if `trace=True` or if validation data is provided.
         """
-        
+
         np.random.seed(42)
         history = ConvergenceHistory()
-        history['train'] = []
-        history['time'] = []
+        history["train"] = []
+        history["time"] = []
         train_preds = np.zeros(X.shape[0])
         if X_val is not None and y_val is not None:
             trace = True
-            history['val'] = []
+            history["val"] = []
             val_preds = np.zeros(X_val.shape[0])
 
         for idx, tree in enumerate(self.forest):
-            bootstrap_indices = np.random.choice(
-                X.shape[0], size=X.shape[0], replace=True)
+            bootstrap_indices = np.random.choice(X.shape[0], size=X.shape[0], replace=True)
             X_bootstrap, y_bootstrap = X[bootstrap_indices], y[bootstrap_indices]
 
             start_time = time.time()
             tree.fit(X_bootstrap, y_bootstrap)
-            history['time'].append(time.time() - start_time)
+            history["time"].append(time.time() - start_time)
 
             train_preds += tree.predict(X)
             train_loss = rmse(train_preds / (idx + 1), y)
-            history['train'].append(train_loss)
+            history["train"].append(train_loss)
             if X_val is not None:
                 val_preds += tree.predict(X_val)
                 val_loss = rmse(val_preds / (idx + 1), y_val)
-                history['val'].append(val_loss)
+                history["val"].append(val_loss)
 
             if patience is not None:
                 if whether_to_stop(history, patience):
@@ -90,7 +85,6 @@ class RandomForestMSE:
             return history
 
         return None
-
 
     def predict(self, X: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
         """
@@ -104,12 +98,11 @@ class RandomForestMSE:
         Returns:
             npt.NDArray[np.float64]: Predicted values, array of shape (n_objects,).
         """
-        
+
         preds = np.zeros(X.shape[0])
         for tree in self.forest:
             preds += tree.predict(X)
         return preds / self.n_estimators
-
 
     def dump(self, dirpath: str) -> None:
         """
@@ -147,9 +140,6 @@ class RandomForestMSE:
 
         trees_path = Path(dirpath) / "trees"
 
-        instance.forest = [
-            joblib.load(trees_path / f"tree_{i:04d}.joblib")
-            for i in range(params["n_estimators"])
-        ]
+        instance.forest = [joblib.load(trees_path / f"tree_{i:04d}.joblib") for i in range(params["n_estimators"])]
 
         return instance
